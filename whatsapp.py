@@ -12,16 +12,16 @@ from selenium.webdriver.support import expected_conditions as EC
 import signal
 import sys
 
-# Настройка логирования
+# Sitting Logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     datefmt='%H:%M:%S'
 )
 
-# Обработка сигналов завершения программы
+# Processing signal end program
 def handle_exit(signal, frame):
-    logging.info("Программа завершена пользователем.")
+    logging.info("Program terminated by user.")
     delete_image()
     sys.exit(0)
 
@@ -31,7 +31,7 @@ signal.signal(signal.SIGTERM, handle_exit)
 
 def load_image_links(file_path):
     """
-    Читает ссылки на изображения из текстового файла и возвращает их в виде списка.
+    Load txt with links on images.
     """
     with open(file_path, 'r') as file:
         return [line.strip() for line in file.readlines()]
@@ -39,7 +39,7 @@ def load_image_links(file_path):
 
 def delete_image():
     """
-    Удаление файла изображения если оно загружено.
+    Delete file processed_image if it download.
     """
     if os.path.exists("processed_image.jpg"):
         os.remove("processed_image.jpg")
@@ -47,43 +47,43 @@ def delete_image():
 
 def load_phone_numbers(file_path):
     """
-    Читает номера телефонов из текстового файла и возвращает их в виде списка.
+    Load download txt with numbers.
     """
     try:
         with open(file_path, 'r') as file:
             phone_numbers = [line.strip() for line in file.readlines()]
-            logging.info(f"Загружено {len(phone_numbers)} номеров.")
+            logging.info(f"Load {len(phone_numbers)} numbers.")
             return phone_numbers
     except FileNotFoundError:
-        logging.error(f"Файл с номерами не найден: {file_path}")
+        logging.error(f"File with numbers not found: {file_path}")
         return []
     except Exception as a:
-        logging.error(f"Ошибка при загрузке номеров: {a}")
+        logging.error(f"Error load numbers: {a}")
         return []
 
 
 def clear_search_box(data_browser, position_search_box):
     """
-    Очистка поля поиска перед отправкой следующего сообщения
+    Clear search field.
     """
     try:
         actions = ActionChains(data_browser)
         actions.click(position_search_box).key_down(Keys.CONTROL).send_keys("a").key_up(Keys.CONTROL).send_keys(
             Keys.BACKSPACE).perform()
     except Exception as a:
-        logging.exception(f"Ошибка очистки поля поиска: {a}")
+        logging.exception(f"Error clear search field: {a}")
 
 
 def preview_image(save_path="processed_image.jpg"):
     """
-    Скачивание и сохранение изображения в файл.
+    Download image in file and open file.
     """
-    # url изображения
+    # url image
     image_url = random.choice(good_morning_list)
     try:
-        # Скачивание изображения
+        # download image
         response = requests.get(image_url, stream=True)
-        response.raise_for_status()  # Проверка на ошибки HTTP
+        response.raise_for_status()  # Status HTTP
 
         with open(save_path, 'wb') as file:
             for chunk in response.iter_content(1024):
@@ -95,33 +95,33 @@ def preview_image(save_path="processed_image.jpg"):
         return os.path.abspath(save_path)
 
     except requests.exceptions.RequestException as a:
-        logging.error(f"Ошибка загрузки изображения: {a}")
+        logging.error(f"Error load image: {a}")
         return None
     except Exception as a:
-        logging.error(f"Ошибка обработки изображения: {a}")
+        logging.error(f"Error processing image: {a}")
         return None
 
 
 def convert_image(save_path="processed_image.jpg"):
     """
-    Преобразует изображение в формат JPG, если это нужно.
+    Converts the image to JPG format if needed.".
     """
     try:
-        # Если изображение уже сохранено в save_path, проверим его формат
+        # If the image is already saved in save_path, we will check its format.
         img = Image.open(save_path)
 
-        # Преобразование в формат RGB, если это необходимо
+        # Convert to RGB format if necessary.
         if img.mode != "RGB":
             img = img.convert("RGB")
 
-        # Перезаписываем файл в том же месте
+        # Overwrite the file in the same location.
         img.save(save_path, "JPEG")
-        logging.info("Подготовка завершена, начало отправки.")
+        logging.info("Preparation completed, starting the sending process.")
 
         return os.path.abspath(save_path)
 
     except Exception as a:
-        logging.error(f"Ошибка обработки изображения: {a}")
+        logging.error(f"Image processing error: {a}")
         return None
 
 
@@ -138,37 +138,37 @@ def wait_for_element(driver, by, locator, timeout=30):
 
 def send_image(data_browser, position_search_box, phone_number, image):
     """
-    Отправка изображения по указанному номеру телефона через WhatsApp Web.
+    Sending an image to the specified phone number via WhatsApp Web.
     """
     try:
-        # Шаг 1: Очистка поля поиска
+        # Step 1: Clear find contact field
         clear_search_box(data_browser, position_search_box)
 
-        # Шаг 2: Поиск контакта
+        # Step 2: Search contact
         actions = ActionChains(data_browser)
         actions.click(position_search_box).send_keys(phone_number).send_keys(Keys.ENTER).perform()
 
-        # Шаг 3: Ожидание загрузки чата
+        # Step 3: Wait download chat
         wait_for_element(data_browser, 'xpath', '//*[@id="main"]/footer')
 
-        # Шаг 4: Нажатие кнопки прикрепления
+        # Step 4: Click attach button
         attach_button = wait_for_element(data_browser, 'xpath', "//button[contains(@title, 'Прикрепить')]")
         if attach_button:
             attach_button.click()
 
-        # Шаг 5: Выбор файла
+        # Step 5: Choice file
         file_input = wait_for_element(data_browser, 'xpath', "(//input[@type='file'])[2]")
         if file_input:
             file_input.send_keys(image)
 
         wait_for_element(data_browser, 'xpath', "//div[@aria-label='Отправить']")
 
-        # Шаг 6: Отправка сообщения
+        # Step 6: Send message
         actions.send_keys(Keys.ENTER).perform()
-        logging.info(f"Сообщение отправлено: {phone_number}")
+        logging.info(f"Message send: {phone_number}")
 
     except Exception:
-        logging.exception(f"Ошибка при отправке изображения контакту {phone_number}")
+        logging.exception(f"Error sending image to the contact {phone_number}")
 
 
 if __name__ == "__main__":
@@ -177,20 +177,20 @@ if __name__ == "__main__":
         phone_numbers = load_phone_numbers('phone_numbers.txt')
 
         if not phone_numbers:
-            raise ValueError("Список номеров пуст или не удалось загрузить.")
+            raise ValueError("The list of numbers is empty or could not be loaded.")
 
         temp_image = preview_image()
         if not temp_image:
-            raise ValueError("Не удалось загрузить изображение.")
+            raise ValueError("Failed to load the image.")
 
-        while input("Отправьте:\n1.Отправить Изображение\n2.Следующее Изображение\n==>> ") != '1':
+        while input("Send:\n1.Send message\n2.Next image\n==>> ") != '1':
             temp_image = preview_image()
             if not temp_image:
-                raise ValueError("Не удалось загрузить изображение.")
+                raise ValueError("Failed to load the image.")
 
         local_image_path = convert_image(temp_image)
         if not local_image_path:
-            raise ValueError("Не удалось преобразовать изображение.")
+            raise ValueError("Failed to convert the image.")
 
         chrome_options = webdriver.ChromeOptions()
         profile_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chrome_profile", "User Data")
@@ -203,20 +203,20 @@ if __name__ == "__main__":
             browser.get('https://web.whatsapp.com/')
             search_box = wait_for_element(browser, 'xpath', "//div[@aria-owns='emoji-suggestion']")
             if not search_box:
-                raise ValueError("Поле поиска не найдено")
+                raise ValueError("Field search not found")
 
             for number in phone_numbers:
                 send_image(browser, search_box, number, local_image_path)
 
             delete_image()
 
-            # Ожидание загрузки всех отправленных сообщений
+            # Wait download all message
             time.sleep(5)
-            logging.info("Программа успешно завершила свою работу")
+            logging.info("Program successful end")
 
     except FileNotFoundError as e:
-        logging.error(f"Файл не найден: {e}")
+        logging.error(f"File not found: {e}")
     except requests.exceptions.RequestException as e:
-        logging.error(f"Ошибка запроса: {e}")
+        logging.error(f"Error request: {e}")
     except Exception as e:
-        logging.exception(f"Непредвиденная ошибка: {e}")
+        logging.exception(f"Fatal error: {e}")
