@@ -127,12 +127,12 @@ def convert_image(save_path="processed_image.jpg"):
 
 def wait_for_element(driver, by, locator, timeout=30):
     """
-    Ожидание появления элемента на странице.
+    Wait update on page.
     """
     try:
         return WebDriverWait(driver, timeout).until(EC.presence_of_element_located((by, locator)))
     except Exception:
-        logging.exception(f"Ошибка ожидания элемента: {locator}")
+        logging.exception(f"Error wait element: {locator}")
         return None
 
 
